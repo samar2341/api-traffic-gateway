@@ -1,0 +1,8 @@
+node_modules/
+*.exe
+*.o
+*.out
+*.obj
+*.log
+.env
+.vscode/
