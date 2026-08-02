@@ -1,22 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>API TRAFFIC GATEWAY</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinelRL</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <h1>API TRAFFIC GATEWAY</h1>
+    <div class="container">
 
-    <button id="sendBtn">
-        Send API Request
-    </button>
+        <h1>🛡 SentinelRL</h1>
+        <p>API Traffic Control Engine</p>
 
-    <pre id="response"></pre>
+        <div class="card">
 
-    <script src="app.js"></script>
+            <h2>API Playground</h2>
+
+            <label>User ID</label>
+
+            <input
+                id="userId"
+                type="number"
+                value="101"
+            >
+
+            <label>Endpoint</label>
+
+            <select id="endpoint">
+
+                <option value="/products">GET /products</option>
+
+                <option value="/login">POST /login</option>
+
+                <option value="/profile">GET /profile</option>
+
+                <option value="/orders">POST /orders</option>
+
+            </select>
+
+            <button id="sendBtn">
+
+                Send Request
+
+            </button>
+
+        </div>
+
+        <div class="card">
+
+            <h2>Response</h2>
+
+            <pre id="response">
+
+Waiting...
+
+            </pre>
+            <div class="card">
+
+    <h2>Live Statistics</h2>
+
+    <p>Total Requests :
+        <span id="total">0</span>
+    </p>
+
+    <p>Allowed :
+        <span id="allowed">0</span>
+    </p>
+
+    <p>Blocked :
+        <span id="blocked">0</span>
+    </p>
+
+    <p>Active Users :
+        <span id="users">0</span>
+    </p>
+
+</div>
+
+        </div>
+
+    </div>
+
+<script src="app.js"></script>
 
 </body>
 

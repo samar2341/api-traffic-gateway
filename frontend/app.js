@@ -1,30 +1,61 @@
-const button = document.getElementById("sendBtn");
+const sendBtn = document.getElementById("sendBtn");
 
 const responseBox = document.getElementById("response");
 
-button.addEventListener("click", async () => {
+async function loadStats(){
 
-    const response = await fetch("http://localhost:3000/api/request",{
+    const response = await fetch("http://localhost:3000/api/stats");
 
-        method:"POST",
+    const stats = await response.json();
 
-        headers:{
-            "Content-Type":"application/json"
-        },
+    document.getElementById("total").textContent =
+        stats.totalRequests;
 
-        body:JSON.stringify({
+    document.getElementById("allowed").textContent =
+        stats.allowedRequests;
 
-            userId:101,
+    document.getElementById("blocked").textContent =
+        stats.blockedRequests;
 
-            endpoint:"/products"
+    document.getElementById("users").textContent =
+        stats.activeUsers;
 
-        })
+}
 
-    });
+sendBtn.addEventListener("click", async ()=>{
+
+    const userId =
+        document.getElementById("userId").value;
+
+    const endpoint =
+        document.getElementById("endpoint").value;
+
+    const response =
+        await fetch("http://localhost:3000/api/request",{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+
+                userId,
+
+                endpoint
+
+            })
+
+        });
 
     const data = await response.json();
 
     responseBox.textContent =
         JSON.stringify(data,null,4);
 
+    loadStats();
+
 });
+
+loadStats();
