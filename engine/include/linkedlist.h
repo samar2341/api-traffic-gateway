@@ -3,29 +3,28 @@
 
 #include "request.h"
 
-typedef struct Node
+#define REQUEST_HISTORY_CAPACITY 500
+
+typedef struct RequestNode
 {
     Request data;
-    struct Node *next;
-
-} Node;
+    struct RequestNode *next;
+} RequestNode;
 
 typedef struct
 {
-    Node *head;
-    Node *tail;
-    int size;
-
+    RequestNode *head;
+    RequestNode *tail;
+    unsigned int size;
 } LinkedList;
 
 void initLinkedList(LinkedList *list);
-
-void pushBack(LinkedList *list, Request request);
-
 void popFront(LinkedList *list);
-
-Node *front(LinkedList *list);
-
-int isEmpty(LinkedList *list);
+int appendRequest(LinkedList *list, const Request *request);
+int prependRequest(LinkedList *list, const Request *request);
+int removeRequest(LinkedList *list, const char *requestId);
+RequestNode *findRequest(LinkedList *list, const char *requestId);
+unsigned int traverseRequests(const LinkedList *list, Request *output, unsigned int capacity);
+void destroyLinkedList(LinkedList *list);
 
 #endif

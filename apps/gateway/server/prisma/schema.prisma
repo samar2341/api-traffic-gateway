@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model GatewayRequest {
+  id              String   @id
+  timestamp       DateTime @default(now())
+  source          String
+  method          String
+  endpoint        String
+  decision        String
+  status          String
+  responseCode    Int
+  latencyMs       Float
+  eventType       String?
+  reason           String
+
+  @@index([timestamp])
+  @@index([source, timestamp])
+  @@index([decision, timestamp])
+}
+
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  eventType String
+  source    String
+  endpoint  String
+  action    String
+  severity  String
+  details   String
+
+  @@index([timestamp])
+  @@index([eventType, timestamp])
+}
+
+model Rule {
+  id        String   @id @default(cuid())
+  ruleName  String
+  ruleType  String
+  pattern   String
+  action    String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ruleType, enabled])
+}
+
+model BlockedSource {
+  id        String   @id @default(cuid())
+  source    String
+  reason    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+  active    Boolean  @default(true)
+
+  @@index([source, active])
+}

@@ -1,4 +1,6 @@
 node_modules/
+dist/
+engine/bin/
 *.exe
 *.o
 *.out
@@ -6,3 +8,5 @@ node_modules/
 *.log
 .env
 .vscode/
+
+/prd

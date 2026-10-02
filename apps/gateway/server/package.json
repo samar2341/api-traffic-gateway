@@ -1,0 +1,25 @@
+{
+  "name": "api-traffic-gateway-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "build:engine": "node scripts/build-engine.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "test": "node --test",
+    "test:engine": "node scripts/run-engine-tests.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^5.1.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "prisma": "^6.19.3",
+    "socket.io": "^4.8.1"
+  }
+}

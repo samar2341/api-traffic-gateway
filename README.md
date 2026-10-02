@@ -1,516 +1,99 @@
-# API TRAFFIC GATEWAY - Intelligent API Traffic Control Engine
+# API Traffic Gateway
 
-> A lightweight API Traffic Control Engine that monitors, analyzes, and regulates API requests using fundamental Data Structures and Algorithms.
-
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Language](https://img.shields.io/badge/C-Engine-blue)
-![Node.js](https://img.shields.io/badge/Node.js-Backend-green)
-![DSA](https://img.shields.io/badge/Data%20Structures-Core-orange)
-
----
-
-## Overview
-
-SentinelRL is a **Developer Infrastructure Tool** that acts as an intelligent gateway between clients and backend APIs.
-
-Instead of allowing every incoming request to directly reach the server, SentinelRL analyzes every request using various Data Structures to determine whether it should be:
-
-- ✅ Allowed
-- ⏳ Delayed
-- ❌ Blocked
-- 📊 Logged
-- 📈 Analyzed
-
-The objective of the project is to demonstrate how classical Data Structures can solve modern backend engineering problems.
-
----
-
-## Problem Statement
-
-Modern applications receive thousands of API requests every second.
-
-Without proper traffic control:
-
-- Servers become overloaded
-- API abuse becomes common
-- Performance decreases
-- Resources are wasted
-- Monitoring becomes difficult
-
-SentinelRL acts as a middleware layer that intelligently processes API traffic before forwarding requests to the backend.
-
----
+A controlled API traffic lab built as exactly two web applications. Web 1 creates requests and traffic; Web 2 receives them through a gateway, makes security decisions in a native C engine, hosts the protected API, and provides monitoring.
 
 ## Architecture
 
+```text
+apps/sender                 Web 1: React + Vite request sender
+apps/gateway/client         Web 2: React + Vite monitoring console
+apps/gateway/server         Web 2: Express + Socket.IO + Prisma
+engine                      Native C DSA library and request processor
 ```
 
-┌──────────────┐
-│   Client     │
-│ (Browser)    │
-└──────┬───────┘
-│
-▼
-┌────────────────────────────┐
-│       SentinelRL           │
-│ API Traffic Control Engine │
-└────────────┬───────────────┘
-│
-├──────────────┐
-│              │
-▼              ▼
-Decision     Analytics
-Engine
-│
-▼
-┌──────────────┐
-│ Demo Backend │
-└──────────────┘
+The C engine is a separate native module, not a third web application. Required Queue, Stack, List, Linked List, and Tree structures are implemented in C and used by the request decision path. Node communicates with one persistent native process using a line-oriented stdin/stdout protocol.
 
+## Requirements
+
+- Node.js 20.19+ or 22.12+
+- npm
+- GCC-compatible C compiler approved by the operating system's application-control policy
+- PostgreSQL 15+
+
+## Install
+
+```powershell
+npm.cmd --prefix apps/sender install
+npm.cmd --prefix apps/gateway/client install
+npm.cmd --prefix apps/gateway/server install
 ```
 
----
+Create a server environment file by copying `apps/gateway/server/.env.example` to `apps/gateway/server/.env`. Set a strong `JWT_SECRET`, demo credentials, and `DATABASE_URL` for PostgreSQL. Create the `api_traffic_gateway` database, then from the repository root run:
 
-# Features
-
-## Request Monitoring
-
-Monitors every incoming API request.
-
----
-
-## Traffic Control
-
-Controls request flow before it reaches the backend.
-
----
-
-## Rate Limiting
-
-Limits excessive API requests from users.
-
----
-
-## Request Queue
-
-Maintains request order using Queue.
-
----
-
-## User Tracking
-
-Tracks active users and request statistics.
-
----
-
-## Request Analytics
-
-Generates statistics including
-
-- Total Requests
-- Allowed Requests
-- Blocked Requests
-- Active Users
-- Traffic Distribution
-
----
-
-## Search Requests
-
-Search users or requests efficiently.
-
----
-
-## Sort Reports
-
-Generate sorted reports based on
-
-- User ID
-- Request Count
-- Time
-- Endpoint
-
----
-
-## Configurable Rules
-
-Administrator can configure
-
-- Maximum Requests
-- Time Window
-- Queue Size
-
----
-
-# Technology Stack
-
-## Frontend
-
-- HTML5
-- CSS3
-- JavaScript
-
-## Backend
-
-- Node.js
-- Express.js
-
-## Core Engine
-
-- C Programming
-
-## Communication
-
-- Child Process / Native Integration
-
----
-
-# Project Structure
-
+```powershell
+npm.cmd --prefix apps/gateway/server run db:generate
+npm.cmd --prefix apps/gateway/server run db:push
+npm.cmd --prefix apps/gateway/server run build:engine
 ```
 
-SentinelRL/
+If `DATABASE_URL` is omitted, the server clearly reports that it uses in-memory development storage; this mode is not persistent. The development token defaults (`demo` / `gateway-demo`, `viewer` / `gateway-viewer`) are for local demonstrations only and are disabled in production unless explicit credentials are configured.
 
-│
+## Run
 
-├── frontend/
+Open separate terminals from the repository root:
 
-│ ├── index.html
-
-│ ├── dashboard.js
-
-│ ├── style.css
-
-│
-
-├── server/
-
-│ ├── server.js
-
-│ ├── routes/
-
-│ ├── controllers/
-
-│ └── middleware/
-
-│
-
-├── engine/
-
-│ ├── rate_limiter.c
-
-│ ├── hash_table.c
-
-│ ├── queue.c
-
-│ ├── linked_list.c
-
-│ ├── bst.c
-
-│ ├── sorting.c
-
-│ ├── searching.c
-
-│ └── utils.c
-
-│
-
-├── docs/
-
-│
-
-├── README.md
-
-│
-
-└── LICENSE
-
+```powershell
+npm.cmd --prefix apps/sender run dev
+npm.cmd --prefix apps/gateway/client run dev
+npm.cmd --prefix apps/gateway/server run dev
 ```
 
----
+- Sender: http://localhost:5173
+- Gateway console: http://localhost:5174
+- Gateway API: http://localhost:3000
 
-# Working
+The gateway server requires the compiled C engine. It fails startup explicitly if the executable is missing rather than substituting JavaScript decision logic. Sign into the gateway console and use **Copy token** to authorize the sender's requests.
 
+## Features
+
+- Request builder: GET, POST, PUT, PATCH, DELETE; endpoint, headers, query, JSON body; response status/body/time.
+- Traffic generator: request count, rate, concurrency, pause/stop, and normal, invalid, unauthorized, SQL injection, and flood scenarios. The sender constructs traffic; it does not decide whether traffic is malicious.
+- Gateway: C-based route validation, token state evaluation, per-source rate and burst limiting, configurable SQL pattern matching, and deterministic ALLOW/BLOCK/RATE_LIMIT decisions before protected handlers.
+- Monitoring: dashboard metrics, request history, filtered security events, rules management, and Socket.IO updates.
+- Persistence: PostgreSQL models for gateway requests, security events, rules, and blocked sources via Prisma.
+- Security controls: JWT authentication, admin authorization, Helmet headers, origin-limited CORS, bounded JSON bodies, input validation, and structured server errors.
+
+## API
+
+- `GET /api/health`
+- `POST /api/auth/token`
+- `GET|POST /api/test`
+- `GET|POST|PUT|PATCH|DELETE /api/protected`
+- `GET /api/metrics`
+- `GET /api/requests`
+- `GET /api/security/events`
+- `GET /api/rules`
+- Admin: `POST /api/admin/rules`, `PATCH|DELETE /api/admin/rules/:id`, `GET|POST /api/admin/blocked-sources`
+- `GET /api/dsa`
+
+Socket.IO events: `gateway:connected`, `request:processed`, `security:event`, `gateway:stats`, and `rules:changed`. A valid bearer token is required to connect.
+
+## Tests
+
+```powershell
+npm.cmd --prefix apps/sender run build
+npm.cmd --prefix apps/gateway/client run build
+npm.cmd --prefix apps/gateway/server run test
+npm.cmd --prefix apps/gateway/server run test:engine
 ```
 
-User Request
+`test:engine` compiles and runs C assertions covering the five required data structures. The same OS-approved C compiler is required for both the engine and its tests.
 
-↓
+## Limits
 
-Browser
+This is an academic gateway demonstration, not a production WAF or distributed traffic service. Rate counters and native DSA state are process-local; horizontal deployments require shared state and coordination. High-volume tests should remain controlled and use modest request counts on local machines. PostgreSQL persistence requires a configured, reachable database.
 
-↓
+## Project Documents
 
-Express Server
-
-↓
-
-SentinelRL Engine
-
-↓
-
-Hash Lookup
-
-↓
-
-Request Queue
-
-↓
-
-Decision Engine
-
-↓
-
-Allow / Block
-
-↓
-
-Backend API
-
-↓
-
-Response
-
-```
-
----
-
-# Data Structures Used
-
-## 1. Arrays
-
-Used for
-
-- Statistics
-- Request Counters
-- Analytics
-- Configuration
-
-Operations
-
-- Insert
-- Update
-- Delete
-- Traverse
-
----
-
-## 2. Queue
-
-Stores incoming API requests in FIFO order.
-
-Used for
-
-- Request Processing
-- Sliding Window
-- Waiting Requests
-
-Operations
-
-- Enqueue
-- Dequeue
-- Peek
-
----
-
-## 3. Circular Queue
-
-Used to maintain a fixed-size request history.
-
-Benefits
-
-- Constant Memory
-- Efficient Rotation
-
----
-
-## 4. Linked List
-
-Used to implement dynamic request queues.
-
-Benefits
-
-- Dynamic Memory
-- Fast Insertions
-- Fast Deletions
-
----
-
-## 5. Stack
-
-Used for
-
-- Undo Configuration
-- Rollback Operations
-
----
-
-## 6. Hash Table
-
-Core Data Structure.
-
-Maps
-
-```
-
-User ID
-
-↓
-
-Hash Function
-
-↓
-
-Bucket
-
-↓
-
-User Record
-
-```
-
-Average Lookup
-
-```
-
-O(1)
-
-```
-
----
-
-## 7. Binary Search Tree
-
-Stores
-
-- Active Users
-- Request Counts
-
-Provides
-
-- Ordered Traversal
-- Analytics
-- Sorted Reports
-
----
-
-## 8. Searching Algorithms
-
-Implemented
-
-- Linear Search
-- Binary Search
-
-Applications
-
-- Search Users
-- Search Requests
-- Search Logs
-
----
-
-## 9. Sorting Algorithms
-
-Implemented
-
-- Bubble Sort
-- Selection Sort
-- Insertion Sort
-
-Applications
-
-- Reports
-- Analytics
-- User Ranking
-
----
-
-# DSA Coverage
-
-| Unit | Topic | Used |
-|-------|-------|------|
-| Unit 1 | Arrays | ✅ |
-| Unit 1 | Pointers | ✅ |
-| Unit 1 | Dynamic Memory Allocation | ✅ |
-| Unit 2 | Stack | ✅ |
-| Unit 2 | Queue | ✅ |
-| Unit 2 | Circular Queue | ✅ |
-| Unit 2 | Deque *(Optional)* | ✅ |
-| Unit 2 | Priority Queue *(Optional)* | ✅ |
-| Unit 3 | Linked List | ✅ |
-| Unit 3 | Circular Linked List | ✅ |
-| Unit 3 | Doubly Linked List | ✅ |
-| Unit 3 | Stack using Linked List | ✅ |
-| Unit 3 | Queue using Linked List | ✅ |
-| Unit 4 | Sequential Search | ✅ |
-| Unit 4 | Binary Search | ✅ |
-| Unit 4 | Hash Table | ✅ |
-| Unit 4 | Bubble Sort | ✅ |
-| Unit 4 | Selection Sort | ✅ |
-| Unit 4 | Insertion Sort | ✅ |
-| Unit 5 | Binary Tree | ✅ |
-| Unit 5 | BST | ✅ |
-| Unit 5 | Tree Traversals | ✅ |
-| Unit 5 | Threaded Binary Tree *(Analytics Module)* | ✅ |
-| Unit 5 | Huffman Tree *(Log Compression Module)* | ✅ |
-
----
-
-# Future Scope
-
-- Redis Integration
-- Authentication
-- JWT Support
-- API Key Management
-- Dashboard Analytics
-- Docker Deployment
-- Kubernetes Support
-- Distributed Cache
-- Redis Benchmarking
-- Reverse Proxy Support
-
----
-
-# Learning Outcomes
-
-After completing SentinelRL, students will understand
-
-- Practical implementation of Data Structures
-- API request lifecycle
-- Backend architecture
-- Middleware concepts
-- Traffic control mechanisms
-- Performance optimization
-- System design fundamentals
-
----
-
-# Team
-
-### Backend & DSA Engine
-
-- Core Data Structures
-- Request Processing
-- Algorithms
-
-### Frontend
-
-- Dashboard
-- Visualization
-- Reports
-
-### Backend Integration
-
-- Express APIs
-- Communication Layer
-- Middleware
-
----
-
-# License
-
-This project is developed for academic and educational purposes as a part of the Project-Based Learning.
-
----
-
-> *"Building modern backend infrastructure using classical Data Structures."*
+- [Product Requirements Document](PRD/prd.md)
+- [Coding Phases](PRD/code.md)
