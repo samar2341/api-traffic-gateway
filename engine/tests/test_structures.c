@@ -6,32 +6,48 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static Request makeRequest(const char *id)
 {
     Request request = {0};
-    strncpy(request.id, id, sizeof(request.id) - 1);
+    size_t length;
+
+    if (id == NULL)
+    {
+        request.id[0] = '\0';
+    }
+    else
+    {
+        length = strlen(id);
+        if (length >= sizeof(request.id))
+            length = sizeof(request.id) - 1U;
+        memcpy(request.id, id, length);
+        request.id[length] = '\0';
+    }
     return request;
 }
 
 static void testQueue(void)
 {
-    RequestQueue queue;
+    RequestQueue *queue = calloc(1, sizeof(*queue));
     Request first = makeRequest("first");
     Request second = makeRequest("second");
     Request output = {0};
-    queueInit(&queue);
-    assert(queueIsEmpty(&queue));
-    assert(queueEnqueue(&queue, &first));
-    assert(queueEnqueue(&queue, &second));
-    assert(strcmp(queuePeek(&queue)->id, "first") == 0);
-    assert(queueDequeue(&queue, &output));
+    assert(queue != NULL);
+    queueInit(queue);
+    assert(queueIsEmpty(queue));
+    assert(queueEnqueue(queue, &first));
+    assert(queueEnqueue(queue, &second));
+    assert(strcmp(queuePeek(queue)->id, "first") == 0);
+    assert(queueDequeue(queue, &output));
     assert(strcmp(output.id, "first") == 0);
-    assert(queueDequeue(&queue, &output));
+    assert(queueDequeue(queue, &output));
     assert(strcmp(output.id, "second") == 0);
-    assert(!queueDequeue(&queue, &output));
-    assert(queue.totalEnqueued == 2 && queue.totalDequeued == 2);
+    assert(!queueDequeue(queue, &output));
+    assert(queue->totalEnqueued == 2 && queue->totalDequeued == 2);
+    free(queue);
 }
 
 static void testStack(void)
@@ -65,7 +81,7 @@ static void testLinkedList(void)
     LinkedList history;
     Request oldest = makeRequest("oldest");
     Request newest = makeRequest("newest");
-    Request output[2] = {{0}};
+    Request output[2] = {0};
     initLinkedList(&history);
     assert(appendRequest(&history, &oldest));
     assert(prependRequest(&history, &newest));

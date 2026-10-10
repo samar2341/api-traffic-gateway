@@ -24,10 +24,33 @@ export class NativeEngine {
   #closed = false;
   #lastMetrics = { queueLength: 0, totalEnqueued: 0, totalDequeued: 0, stackSize: 0, historySize: 0, routeCount: 0, topEvent: null };
 
+  #resolveBinary() {
+    const candidates = [];
+    const configured = process.env.NATIVE_ENGINE_PATH?.trim();
+    if (configured) candidates.push(configured);
+    candidates.push(defaultBinary);
+
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      if (existsSync(candidate)) return candidate;
+    }
+
+    const serverDir = resolve(repoRoot, "apps/gateway/server");
+    const build = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["--prefix", serverDir, "run", "build:engine"], {
+      cwd: repoRoot,
+      stdio: "inherit",
+      shell: false,
+    });
+
+    if (build.status === 0 && existsSync(defaultBinary)) return defaultBinary;
+    return null;
+  }
+
   start() {
-    const binary = process.env.NATIVE_ENGINE_PATH || defaultBinary;
-    if (!existsSync(binary))
-      throw new NativeEngineError(`Native C engine is missing at ${binary}. Run the gateway server build:engine script.`);
+    const binary = this.#resolveBinary();
+    if (!binary) {
+      throw new NativeEngineError(`Native C engine is missing at ${defaultBinary}. Run the gateway server build:engine script.`);
+    }
     this.#child = spawn(binary, [], { stdio: ["pipe", "pipe", "inherit"] });
     this.#readline = createInterface({ input: this.#child.stdout });
     this.#readline.on("line", (line) => this.#handleLine(line));

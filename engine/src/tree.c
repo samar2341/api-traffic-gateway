@@ -3,6 +3,23 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void copyStringLimited(char *destination, size_t capacity, const char *source)
+{
+	size_t length;
+	if (destination == NULL || capacity == 0U)
+		return;
+	if (source == NULL)
+	{
+		destination[0] = '\0';
+		return;
+	}
+	length = strlen(source);
+	if (length >= capacity)
+		length = capacity - 1U;
+	memcpy(destination, source, length);
+	destination[length] = '\0';
+}
+
 static ThreatNode *insertNode(ThreatNode *root, const char *category, const char *action)
 {
 	if (root == NULL)
@@ -10,8 +27,8 @@ static ThreatNode *insertNode(ThreatNode *root, const char *category, const char
 		root = (ThreatNode *)calloc(1, sizeof(ThreatNode));
 		if (root == NULL)
 			return NULL;
-		strncpy(root->category, category, sizeof(root->category) - 1);
-		strncpy(root->action, action, sizeof(root->action) - 1);
+		copyStringLimited(root->category, sizeof(root->category), category);
+		copyStringLimited(root->action, sizeof(root->action), action);
 		return root;
 	}
 	int comparison = strcmp(category, root->category);

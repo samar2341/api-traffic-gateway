@@ -22,14 +22,29 @@ void routeListInit(RouteList *list)
 	routeListAdd(list, "DELETE", "/api/protected");
 }
 
+static void copyStringLimited(char *destination, size_t capacity, const char *source)
+{
+	size_t length;
+	if (destination == NULL || capacity == 0U)
+		return;
+	if (source == NULL)
+	{
+		destination[0] = '\0';
+		return;
+	}
+	length = strlen(source);
+	if (length >= capacity)
+		length = capacity - 1U;
+	memcpy(destination, source, length);
+	destination[length] = '\0';
+}
+
 int routeListAdd(RouteList *list, const char *method, const char *path)
 {
 	if (list->count == ROUTE_LIST_CAPACITY || routeListFind(list, method, path))
 		return 0;
-	strncpy(list->items[list->count].method, method, ROUTE_METHOD_LENGTH - 1);
-	list->items[list->count].method[ROUTE_METHOD_LENGTH - 1] = '\0';
-	strncpy(list->items[list->count].path, path, ROUTE_PATH_LENGTH - 1);
-	list->items[list->count].path[ROUTE_PATH_LENGTH - 1] = '\0';
+	copyStringLimited(list->items[list->count].method, sizeof(list->items[list->count].method), method);
+	copyStringLimited(list->items[list->count].path, sizeof(list->items[list->count].path), path);
 	list->count++;
 	return 1;
 }
@@ -60,8 +75,7 @@ int routeListUpdate(RouteList *list, const char *method, const char *path, const
 	for (unsigned int i = 0; i < list->count; i++)
 		if (strcmp(list->items[i].method, method) == 0 && strcmp(list->items[i].path, path) == 0)
 		{
-			strncpy(list->items[i].path, newPath, ROUTE_PATH_LENGTH - 1);
-			list->items[i].path[ROUTE_PATH_LENGTH - 1] = '\0';
+			copyStringLimited(list->items[i].path, sizeof(list->items[i].path), newPath);
 			return 1;
 		}
 	return 0;

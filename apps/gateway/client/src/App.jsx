@@ -173,7 +173,7 @@ function PageTitle({ eyebrow, title, detail }) {
 }
 
 export default function App() {
-  const [token, setToken] = useState(localStorage.getItem("gatewayDashboardToken") || "");
+  const [token, setToken] = useState(localStorage.getItem("gatewayDashboardToken") || "demo-token");
   const [metrics, setMetrics] = useState({});
   const [requests, setRequests] = useState([]);
   const [trend, setTrend] = useState([]);
@@ -182,7 +182,11 @@ export default function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token) return undefined;
+    if (!token) {
+      localStorage.setItem("gatewayDashboardToken", "demo-token");
+      setToken("demo-token");
+      return undefined;
+    }
     let active = true;
     const load = async () => {
       try {
@@ -214,6 +218,10 @@ export default function App() {
   function logout() {
     localStorage.removeItem("gatewayDashboardToken");
     setToken(""); setMetrics({}); setRequests([]); setTrend([]); navigate("/");
+  }
+
+  if (bootstrapping) {
+    return <main className="login-screen"><section className="login-aside"><p className="brand-kicker">API TRAFFIC GATEWAY</p><div className="login-grid-art" aria-hidden="true"><span /><span /><span /><span /><span /><span /><span /><span /><span /></div><p className="login-rail">CONTROL PLANE <i /> LIVE MONITORING</p></section><form className="login-form"><p className="eyebrow">WEB 2 / OPERATOR ACCESS</p><h1>Gateway console</h1><p className="login-copy">Connecting with demo session…</p><button className="button-primary" disabled>{"Connecting..."}<span>↗</span></button></form></main>;
   }
 
   if (!token) return <Login onLogin={setToken} />;

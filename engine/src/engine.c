@@ -38,10 +38,19 @@ static unsigned int sqlRuleCount;
 
 static void copyField(char *destination, size_t capacity, const char *source)
 {
-	if (capacity == 0)
+	size_t length;
+	if (destination == NULL || capacity == 0U)
 		return;
-	strncpy(destination, source, capacity - 1);
-	destination[capacity - 1] = '\0';
+	if (source == NULL)
+	{
+		destination[0] = '\0';
+		return;
+	}
+	length = strlen(source);
+	if (length >= capacity)
+		length = capacity - 1U;
+	memcpy(destination, source, length);
+	destination[length] = '\0';
 }
 
 static char *nextField(char **cursor)
@@ -188,7 +197,36 @@ static void processRequest(Request *request, long long now)
 	if (strcmp(request->decision, "ALLOW") != 0)
 	{
 		char event[SECURITY_EVENT_TEXT_LENGTH];
-		snprintf(event, sizeof(event), "%s|%s|%s", request->eventType, request->source, request->endpoint);
+		size_t offset = 0;
+		size_t length;
+		event[0] = '\0';
+		length = strlen(request->eventType);
+		if (length > 0U && offset + length < sizeof(event))
+		{
+			memcpy(event + offset, request->eventType, length);
+			offset += length;
+		}
+		if (offset + 1U < sizeof(event))
+		{
+			event[offset++] = '|';
+		}
+		length = strlen(request->source);
+		if (length > 0U && offset + length < sizeof(event))
+		{
+			memcpy(event + offset, request->source, length);
+			offset += length;
+		}
+		if (offset + 1U < sizeof(event))
+		{
+			event[offset++] = '|';
+		}
+		length = strlen(request->endpoint);
+		if (length > 0U && offset + length < sizeof(event))
+		{
+			memcpy(event + offset, request->endpoint, length);
+			offset += length;
+		}
+		event[sizeof(event) - 1U] = '\0';
 		stackPush(&eventStack, event);
 	}
 	appendRequest(&requestHistory, request);

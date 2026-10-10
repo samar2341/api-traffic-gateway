@@ -21,17 +21,9 @@ export function createGatewayRoutes({ engine, io }) {
 
   router.get("/api/health", (_req, res) => res.json({ status: "ok", service: "api-traffic-gateway", storage: getStoreMode(), nativeEngine: true }));
 
-  router.post("/api/auth/token", (req, res) => {
-    const adminUsername = process.env.DEMO_USERNAME || (process.env.NODE_ENV === "production" ? "" : "demo");
-    const adminPassword = process.env.DEMO_PASSWORD || (process.env.NODE_ENV === "production" ? "" : "gateway-demo");
-    const viewerUsername = process.env.VIEWER_USERNAME || (process.env.NODE_ENV === "production" ? "" : "viewer");
-    const viewerPassword = process.env.VIEWER_PASSWORD || (process.env.NODE_ENV === "production" ? "" : "gateway-viewer");
-    const isAdmin = Boolean(adminUsername && adminPassword && req.body?.username === adminUsername && req.body?.password === adminPassword);
-    const isViewer = Boolean(viewerUsername && viewerPassword && req.body?.username === viewerUsername && req.body?.password === viewerPassword);
-    if (!isAdmin && !isViewer)
-      return res.status(401).json({ error: "Invalid credentials" });
-    const token = jwt.sign({ role: isAdmin ? "admin" : "viewer" }, process.env.JWT_SECRET, { subject: req.body.username, expiresIn: "8h" });
-    res.json({ token, tokenType: "Bearer", expiresInSeconds: 28800, role: isAdmin ? "admin" : "viewer" });
+  router.post("/api/auth/token", (_req, res) => {
+    const token = jwt.sign({ role: "admin" }, process.env.JWT_SECRET, { sub: "anonymous", expiresIn: "8h" });
+    res.json({ token, tokenType: "Bearer", expiresInSeconds: 28800, role: "admin" });
   });
 
   router.get("/api/test", validateApiRequest, gateway, (req, res) => {

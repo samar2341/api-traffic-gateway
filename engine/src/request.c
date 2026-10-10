@@ -5,9 +5,20 @@
 Request createRequest(const char *key, long timestamp)
 {
     Request request = {0};
+    size_t length;
 
-    strncpy(request.apiKey, key, API_KEY_LENGTH - 1);
-    request.apiKey[API_KEY_LENGTH - 1] = '\0';
+    if (key == NULL)
+    {
+        request.apiKey[0] = '\0';
+    }
+    else
+    {
+        length = strlen(key);
+        if (length >= sizeof(request.apiKey))
+            length = sizeof(request.apiKey) - 1U;
+        memcpy(request.apiKey, key, length);
+        request.apiKey[length] = '\0';
+    }
 
     request.timestamp = timestamp;
 
