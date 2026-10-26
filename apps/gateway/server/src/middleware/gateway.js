@@ -11,14 +11,16 @@ const severityFor = (eventType) => ({
 export function createGatewayMiddleware({ engine, io }) {
   return async function gateway(req, res, next) {
     const startedAt = performance.now();
-    const source = req.ip || req.socket.remoteAddress || "unknown";
+    const simulatedSource = req.get("x-gateway-simulated-source")?.trim();
+    const sourceKey = simulatedSource || req.ip || req.socket.remoteAddress || "unknown";
+    const source = simulatedSource ? `${sourceKey} (simulated)` : sourceKey;
     const requestId = randomUUID();
     try {
-      const blocked = await isSourceBlocked(source);
+      const blocked = await isSourceBlocked(sourceKey);
       const input = JSON.stringify({ originalUrl: req.originalUrl, query: req.query, body: req.body ?? null });
       const decision = await engine.evaluate({
             id: requestId,
-            source,
+            source: sourceKey,
             method: req.method,
             endpoint: req.path,
             authenticated: Boolean(req.identity?.authenticated),
@@ -59,7 +61,7 @@ export function createGatewayMiddleware({ engine, io }) {
         await saveEvent(event);
         io.emit("security:event", { ...event, timestamp: event.timestamp.toISOString() });
         if (decision.eventType === "FLOOD")
-          await addBlockedSource(source, decision.reason, new Date(Date.now() + 60000));
+          await addBlockedSource(sourceKey, decision.reason, new Date(Date.now() + 60000));
       }
 
       req.gatewayDecision = decision;

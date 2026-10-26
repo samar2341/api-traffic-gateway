@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 
 const API_DEFAULT = "http://localhost:3000";
 const presets = ["Normal", "Invalid", "Unauthorized", "SQL Injection", "Flood Simulation"];
+const simulatedSourceOptions = ["192.0.2.10", "192.0.2.11", "198.51.100.45"];
 
 export default function App() {
   const [apiUrl, setApiUrl] = useState(localStorage.getItem("gatewayApi") || API_DEFAULT);
   const [token, setToken] = useState(localStorage.getItem("gatewayToken") || "");
+  const [simulatedSource, setSimulatedSource] = useState("192.0.2.10");
   const [method, setMethod] = useState("GET");
   const [endpoint, setEndpoint] = useState("/api/test");
   const [headersText, setHeadersText] = useState("{}");
@@ -57,6 +59,7 @@ export default function App() {
     const url = new URL(`${apiUrl.replace(/\/$/, "")}${test.endpoint}`);
     for (const [key, value] of Object.entries(test.query)) url.searchParams.set(key, String(value));
     const headers = new Headers(test.headers);
+    if (simulatedSource?.trim()) headers.set("X-Gateway-Simulated-Source", simulatedSource.trim());
     if (test.method !== "GET" && test.method !== "DELETE") headers.set("Content-Type", "application/json");
     if (test.includeToken && token) headers.set("Authorization", `Bearer ${token}`);
     const controller = new AbortController();
@@ -161,6 +164,7 @@ export default function App() {
             <div className="panel-heading"><div><span className="panel-index">01</span><h2>Request builder</h2></div><span className="panel-caption">SINGLE REQUEST</span></div>
             <label className="field-label">Gateway URL<input value={apiUrl} onChange={(event) => setApiUrl(event.target.value)} spellCheck="false" /></label>
             <label className="field-label">Bearer token<input value={token} onChange={(event) => setToken(event.target.value)} placeholder="Paste a token from the gateway dashboard" spellCheck="false" /></label>
+            <label className="field-label">Simulated source IP<input list="simulatedSources" value={simulatedSource} onChange={(event) => setSimulatedSource(event.target.value)} spellCheck="false" /><datalist id="simulatedSources">{simulatedSourceOptions.map((item) => <option key={item} value={item} />)}</datalist></label>
             <div className="request-line">
               <label className="field-label method-field">Method<select value={method} onChange={(event) => setMethod(event.target.value)}>{["GET", "POST", "PUT", "PATCH", "DELETE"].map((item) => <option key={item}>{item}</option>)}</select></label>
               <label className="field-label endpoint-field">Endpoint<input value={endpoint} onChange={(event) => setEndpoint(event.target.value)} required spellCheck="false" /></label>
